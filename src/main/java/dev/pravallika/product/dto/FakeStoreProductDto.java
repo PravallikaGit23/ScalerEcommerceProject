@@ -12,7 +12,7 @@ public class FakeStoreProductDto {
     private String title;
     private String description;
     private double price;
-    private String imageUrl;
+    private String image;
     private String category;
 
     public Product toProduct(){
@@ -21,7 +21,7 @@ public class FakeStoreProductDto {
         product.setTitle(getTitle());
         product.setDescription(getDescription());
         product.setPrice(getPrice());
-        product.setImageUrl(getImageUrl());
+        product.setImageUrl(getImage());
 
         Category category1 = new Category();
         category1.setCategory(getCategory());

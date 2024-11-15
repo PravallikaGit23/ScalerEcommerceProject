@@ -1,7 +1,12 @@
 package dev.pravallika.product.service;
 
+import dev.pravallika.product.ExceptionHandler.ProductNotFound;
+import dev.pravallika.product.ExceptionHandler.ProductNotUpdated;
 import dev.pravallika.product.dto.FakeStoreProductDto;
+import dev.pravallika.product.dto.RequestDto;
 import dev.pravallika.product.model.Product;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -20,7 +25,7 @@ public class FakeStoreProductService implements ProductService {
     }
 
     @Override
-    public Product getProduct(long id) {
+    public Product getProduct(long id) throws ProductNotFound{
         ResponseEntity<FakeStoreProductDto> fakeStoreProductDto =
                 restTemplate.exchange("https://fakestoreapi.com/products/" + id,
                         HttpMethod.GET, null,
@@ -28,14 +33,15 @@ public class FakeStoreProductService implements ProductService {
 
                 );
 
-        if (fakeStoreProductDto.hasBody())
-            return fakeStoreProductDto.getBody().toProduct();
+        if(fakeStoreProductDto.getBody() == null)
+            throw  new ProductNotFound("Please try again with correct Id");
 
-        return null;
+
+        return fakeStoreProductDto.getBody().toProduct();
     }
 
     @Override
-    public List<Product> getAllProducts() {
+    public List<Product> getAllProducts() throws ProductNotFound {
 //        ResponseEntity<FakeStoreProductDto[]> listResponseEntity = restTemplate.exchange(
 //                "https://fakestoreapi.com/products",
 //                HttpMethod.GET,
@@ -53,6 +59,10 @@ public class FakeStoreProductService implements ProductService {
                 new ParameterizedTypeReference<List<FakeStoreProductDto>>() {
                 }
         );
+        if(! listResponseEntity.hasBody())
+            throw  new ProductNotFound("Please try again ");
+
+
         List<Product> products = new ArrayList<>();
         for (FakeStoreProductDto fakeStoreProductDto : listResponseEntity.getBody()) {
             products.add(fakeStoreProductDto.toProduct());
@@ -61,7 +71,7 @@ public class FakeStoreProductService implements ProductService {
     }
 
     @Override
-    public List<Product> getLimitedProducts() {
+    public List<Product> getLimitedProducts() throws ProductNotFound {
         ResponseEntity<List<FakeStoreProductDto>> listResponseEntity = restTemplate.exchange(
                 "https://fakestoreapi.com/products?limit=5",
                 HttpMethod.GET,
@@ -69,6 +79,9 @@ public class FakeStoreProductService implements ProductService {
                 new ParameterizedTypeReference<List<FakeStoreProductDto>>() {
                 }
         );
+        if(! listResponseEntity.hasBody())
+            throw  new ProductNotFound("Please try again ");
+
         List<Product> products = new ArrayList<>();
         for (FakeStoreProductDto fakeStoreProductDto : listResponseEntity.getBody()) {
             products.add(fakeStoreProductDto.toProduct());
@@ -77,7 +90,7 @@ public class FakeStoreProductService implements ProductService {
     }
 
     @Override
-    public List<Product> getSortedProducts() {
+    public List<Product> getSortedProducts() throws ProductNotFound {
         ResponseEntity<List<FakeStoreProductDto>> listResponseEntity = restTemplate.exchange(
                 "https://fakestoreapi.com/products?sort=desc",
                 HttpMethod.GET,
@@ -85,6 +98,9 @@ public class FakeStoreProductService implements ProductService {
                 new ParameterizedTypeReference<List<FakeStoreProductDto>>() {
                 }
         );
+        if(! listResponseEntity.hasBody())
+            throw  new ProductNotFound("Please try again ");
+
         List<Product> products = new ArrayList<>();
         for (FakeStoreProductDto fakeStoreProductDto : listResponseEntity.getBody()) {
             products.add(fakeStoreProductDto.toProduct());
@@ -93,12 +109,12 @@ public class FakeStoreProductService implements ProductService {
     }
 
     @Override
-    public Product createProduct(String title, double price, String description, String imageUrl, String category) {
+    public Product createProduct(String title, double price, String description, String imageUrl, String category) throws ProductNotUpdated {
         FakeStoreProductDto fakeStoreProductDto = new FakeStoreProductDto();
         fakeStoreProductDto.setTitle(title);
         fakeStoreProductDto.setPrice(price);
         fakeStoreProductDto.setDescription(description);
-        fakeStoreProductDto.setImageUrl(imageUrl);
+        fakeStoreProductDto.setImage(imageUrl);
         fakeStoreProductDto.setCategory(category);
 
         HttpHeaders headers = new HttpHeaders();
@@ -111,22 +127,80 @@ public class FakeStoreProductService implements ProductService {
                 requestEntity,         //it requires body with headers
                 FakeStoreProductDto.class
         );
+        if(! responseEntity.hasBody())
+            throw  new ProductNotUpdated("Please try again with correct format");
 
         return responseEntity.getBody().toProduct();
     }
 
     @Override
-    public Product deleteProduct(long id) {
+    public Product deleteProduct(long id) throws ProductNotUpdated {
         ResponseEntity<FakeStoreProductDto> fakeStoreProductDtoResponseEntity = restTemplate.exchange(
                            "https://fakestoreapi.com/products/"+ id ,
                            HttpMethod.DELETE,
                             null,
                             FakeStoreProductDto.class
                            );
+        if(! fakeStoreProductDtoResponseEntity.hasBody())
+            throw  new ProductNotUpdated("NOT DELETED. Please try again with correct Id");
+
         return fakeStoreProductDtoResponseEntity.getBody().toProduct();
     }
 
+    @Override
+    public Product updateProductUsingPut(long id,  String title, String description, double price, String image, String category) throws ProductNotUpdated {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        FakeStoreProductDto fakeStoreProductDto = new FakeStoreProductDto();
+        fakeStoreProductDto.setId(id);
+        fakeStoreProductDto.setTitle(title);
+        fakeStoreProductDto.setDescription(description);
+        fakeStoreProductDto.setPrice(price);
+        fakeStoreProductDto.setImage(image);
+        fakeStoreProductDto.setCategory(category);
+        HttpEntity<FakeStoreProductDto> requestEntity = new HttpEntity<>(fakeStoreProductDto, headers);
 
+        ResponseEntity<FakeStoreProductDto> fakeStoreProductDtoResponseEntity = restTemplate.exchange(
+                "https://fakestoreapi.com/products/"+ id ,
+                HttpMethod.PUT,
+                requestEntity,
+                FakeStoreProductDto.class
+        );
+        if(! fakeStoreProductDtoResponseEntity.hasBody())
+            throw  new ProductNotUpdated("NOT UPDATED. Please try again ");
+
+        return fakeStoreProductDtoResponseEntity.getBody().toProduct();
+    }
+
+    @Override
+    public Product updateProductUsingPatch(long id, String title, String description, double price, String image, String category) throws ProductNotUpdated {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        FakeStoreProductDto fakeStoreProductDto = new FakeStoreProductDto();
+        fakeStoreProductDto.setId(id);
+        if(title != null)
+         fakeStoreProductDto.setTitle(title);
+        if(description != null)
+         fakeStoreProductDto.setDescription(description);
+        if(price != 0)
+         fakeStoreProductDto.setPrice(price);
+        if(image != null)
+         fakeStoreProductDto.setImage(image);
+        if(category != null)
+         fakeStoreProductDto.setCategory(category);
+     HttpEntity<FakeStoreProductDto> requestEntity = new HttpEntity<>(fakeStoreProductDto, headers);
+
+    ResponseEntity<FakeStoreProductDto> responseEntity = restTemplate.exchange(
+                "https://fakestoreapi.com/products/"+ id ,
+                HttpMethod.PATCH,
+                requestEntity,
+                FakeStoreProductDto.class
+        );
+        if(responseEntity.getBody() == null)
+            throw  new ProductNotUpdated("product not updated. Please try again with correct Id");
+
+        return responseEntity.getBody().toProduct();
+    }
 
 
 }
