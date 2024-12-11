@@ -22,7 +22,7 @@ public interface ProductService {
 
     Product deleteProduct(long id) throws ProductNotUpdated;
 
-    Product updateProductUsingPut(long id, String title, String description, double price, String image, String category) throws ProductNotUpdated;
+    Product updateProductUsingPut(long id, String title, String description, double price, String image, String category) throws ProductNotUpdated, ProductNotFound;
 
-    Product updateProductUsingPatch(long id, String title, String description, double price, String image, String category) throws ProductNotUpdated;
+    Product updateProductUsingPatch(long id, String title, String description, double price, String image, String category) throws ProductNotUpdated, ProductNotFound;
 }

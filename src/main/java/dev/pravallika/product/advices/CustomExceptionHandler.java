@@ -31,12 +31,13 @@ class CustomExceptionHandler {
         return response;
     }
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorsDTO> handleAll(Exception e){
-        ErrorsDTO err = new ErrorsDTO();
-        String message = e.getMessage();
-        err.setMessage(message);
-        ResponseEntity<ErrorsDTO> response = new ResponseEntity<>(err, HttpStatusCode.valueOf(501));
-        return response;
+    public void handleAll(Exception e){
+//        ErrorsDTO err = new ErrorsDTO();
+//        String message = e.getMessage();
+//        err.setMessage(message);
+//        ResponseEntity<ErrorsDTO> response = new ResponseEntity<>(err, HttpStatusCode.valueOf(501));
+//        return response;
+        //gives 200 response for failures also
     }
 
 

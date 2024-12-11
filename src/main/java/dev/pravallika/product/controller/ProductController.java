@@ -6,6 +6,7 @@ import dev.pravallika.product.dto.RequestDto;
 import dev.pravallika.product.dto.ResponseProduct;
 import dev.pravallika.product.model.Product;
 import dev.pravallika.product.service.ProductService;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -18,7 +19,9 @@ import java.util.List;
 public class ProductController{
 
     private final ProductService productService;
-    ProductController(ProductService productService){
+
+    ProductController(@Qualifier("dataBaseProductService") ProductService productService){
+
         this.productService = productService;
     }
 
@@ -88,7 +91,7 @@ public class ProductController{
     }
 
     @PutMapping("/product/{id}")
-    public ResponseEntity<ResponseProduct> updateCompleteProduct(@PathVariable("id") long id, @RequestBody RequestDto requestDto) throws ProductNotUpdated {
+    public ResponseEntity<ResponseProduct> updateCompleteProduct(@PathVariable("id") long id, @RequestBody RequestDto requestDto) throws ProductNotUpdated, ProductNotFound {
 
         Product product = productService.updateProductUsingPut(id,
                 requestDto.getTitle(),
@@ -102,7 +105,7 @@ public class ProductController{
     }
 
     @PatchMapping("/product/{id}")
-    public ResponseEntity<ResponseProduct> updateProduct(@PathVariable("id") long id, @RequestBody RequestDto requestDto) throws ProductNotUpdated {
+    public ResponseEntity<ResponseProduct> updateProduct(@PathVariable("id") long id, @RequestBody RequestDto requestDto) throws ProductNotUpdated, ProductNotFound {
 
         Product product = productService.updateProductUsingPatch(id,
                 requestDto.getTitle(),
